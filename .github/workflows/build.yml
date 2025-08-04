@@ -1,0 +1,32 @@
+name: Build Android APK
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+        
+    - name: Install build dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential git openjdk-11-jdk
+        pip install buildozer
+        
+    - name: Initialize and build
+      run: |
+        buildozer init
+        buildozer android debug
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v2
+      with:
+        name: photo_geo-apk
+        path: bin/*.apk
