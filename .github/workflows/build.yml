@@ -9,7 +9,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build with Kivy Complete Action
+      - name: Build with Kivy Action
         uses: kivy/buildozer-action@v1.0.0
         with:
           workdir: .
