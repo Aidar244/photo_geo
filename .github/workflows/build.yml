@@ -1,4 +1,4 @@
-name: Build Android APK - Fixed
+name: Build Android APK
 
 on: [push]
 
@@ -28,14 +28,7 @@ jobs:
         pip install --upgrade buildozer==1.5.0
         pip install kivy==2.1.0
         
-    - name: Pre-configure Android SDK
-      run: |
-        # Создаем директории заранее
-        mkdir -p ~/.buildozer/android/platform/android-sdk
-        # Принимаем лицензии заранее
-        echo "y" | sdkmanager --licenses 2>/dev/null || true
-        
-    - name: Create minimal buildozer.spec
+    - name: Create buildozer.spec
       run: |
         cat > buildozer.spec << 'EOF'
 [app]
@@ -61,24 +54,21 @@ log_level = 2
 android.accept_sdk_license = True
 EOF
         
-    - name: Build with pre-accepted licenses
+    - name: Build APK
       run: |
-        # Используем более старую, стабильную конфигурацию
-        buildozer android clean || true
-        
-        # Запускаем сборку с принудительным принятием лицензий
-        echo "y" | timeout 45m buildozer android debug || true
+        # Принудительно принимаем лицензии
+        echo "y" | sdkmanager --licenses >/dev/null 2>&1 || true
+        # Запускаем сборку с таймаутом
+        timeout 60m buildozer android debug || true
         
     - name: Check for APK
       run: |
-        echo "=== Проверка наличия APK ==="
-        find . -name "*.apk" -type f 2>/dev/null || echo "APK файлы не найдены"
-        echo "=== Содержимое папки bin ==="
-        ls -la bin/ 2>/dev/null || echo "Папка bin не найдена"
-        echo "=== Все файлы в проекте ==="
-        find . -type f -name "*.apk" -o -name "*.log" | head -20
+        echo "=== Checking for APK files ==="
+        find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
+        echo "=== Contents of bin directory ==="
+        ls -la bin/ 2>/dev/null || echo "bin directory not found"
         
-    - name: Upload APK (if exists)
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       if: always()
       with:
