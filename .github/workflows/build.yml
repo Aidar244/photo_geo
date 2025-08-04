@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # Используем более стабильную версию Ubuntu
+    runs-on: ubuntu-20.04 # Используем более стабильную версию Ubuntu
     
     steps:
     - uses: actions/checkout@v4
@@ -19,44 +19,70 @@ jobs:
         sudo apt update
         sudo apt install -y build-essential git openjdk-11-jdk
         sudo apt install -y libffi-dev libssl-dev libjpeg-dev zlib1g-dev autoconf automake libtool pkg-config
+        sudo apt install -y unzip zip curl
         
     - name: Install Python dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade Cython==0.29.36
         pip install --upgrade buildozer
+        # Устанавливаем конкретные версии для стабильности
+        pip install kivy==2.1.0
+        pip install python-for-android==2023.3.10
         
     - name: Configure buildozer
       run: |
         # Создаём базовый buildozer.spec
-        buildozer init
-        # Настраиваем buildozer.spec для более стабильной сборки
-        sed -i 's/android.api = 27/android.api = 31/' buildozer.spec
-        sed -i 's/android.minapi = 21/android.minapi = 21/' buildozer.spec
-        sed -i 's/android.ndk = 19b/android.ndk = 25b/' buildozer.spec
-        sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+        fi
         
-    - name: Build APK with retry
+        # Настраиваем buildozer.spec для более стабильной сборки
+        echo "[app]" > buildozer.spec
+        echo "title = PhotoGeo" >> buildozer.spec
+        echo "package.name = photo_geo" >> buildozer.spec
+        echo "package.domain = org.example" >> buildozer.spec
+        echo "" >> buildozer.spec
+        echo "source.dir = ." >> buildozer.spec
+        echo "source.include_exts = py,png,jpg,kv,atlas,txt" >> buildozer.spec
+        echo "" >> buildozer.spec
+        echo "version = 0.1" >> buildozer.spec
+        echo "requirements = python3,kivy==2.1.0" >> buildozer.spec
+        echo "" >> buildozer.spec
+        echo "[app]" >> buildozer.spec
+        echo "android.permissions = CAMERA,ACCESS_FINE_LOCATION,WRITE_EXTERNAL_STORAGE" >> buildozer.spec
+        echo "" >> buildozer.spec
+        echo "[buildozer]" >> buildozer.spec
+        echo "log_level = 2" >> buildozer.spec
+        echo "android.accept_sdk_license = True" >> buildozer.spec
+        echo "android.api = 31" >> buildozer.spec
+        echo "android.minapi = 21" >> buildozer.spec
+        echo "android.ndk = 25b" >> buildozer.spec
+        echo "android.arch = arm64-v8a" >> buildozer.spec
+        
+    - name: Build APK with specific settings
       run: |
-        # Повторяем попытку сборки до 3 раз в случае ошибки
-        for i in {1..3}; do
-          echo "Попытка сборки #$i"
-          if buildozer android debug; then
-            echo "Сборка успешна!"
-            break
-          else
-            echo "Попытка #$i не удалась, очистка и повтор..."
-            buildozer android clean || true
-            if [ $i -eq 3 ]; then
-              echo "Все попытки сборки неудачны"
-              exit 1
-            fi
-            sleep 30
-          fi
-        done
+        # Очищаем кэш перед сборкой
+        buildozer android clean || true
+        
+        # Запускаем сборку с подробным логированием
+        buildozer --verbose android debug
+        
+    - name: Check if APK was created
+      run: |
+        # Проверяем наличие APK
+        if ls bin/*.apk 1> /dev/null 2>&1; then
+          echo "APK успешно создан!"
+          ls -la bin/
+        else
+          echo "APK не найден, но проверим другие возможные местоположения..."
+          find . -name "*.apk" -type f 2>/dev/null || echo "APK файлы не найдены"
+        fi
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: photo_geo-apk
-        path: bin/*.apk
+        path: |
+          bin/*.apk
+          *.apk
