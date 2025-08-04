@@ -30,29 +30,27 @@ jobs:
         
     - name: Create buildozer.spec
       run: |
-        cat > buildozer.spec << 'EOF'
-[app]
-title = PhotoGeo
-package.name = photo_geo
-package.domain = org.example
-
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,txt
-
-version = 0.1
-requirements = python3,kivy==2.1.0
-
-[app]
-android.permissions = CAMERA,ACCESS_FINE_LOCATION
-android.api = 31
-android.minapi = 21
-android.ndk = 25b
-android.arch = arm64-v8a
-
-[buildozer]
-log_level = 2
-android.accept_sdk_license = True
-EOF
+        echo "[app]" > buildozer.spec
+        echo "title = PhotoGeo" >> buildozer.spec
+        echo "package.name = photo_geo" >> buildozer.spec
+        echo "package.domain = org.example" >> buildozer.spec
+        echo "" >> buildozer.spec
+        echo "source.dir = ." >> buildozer.spec
+        echo "source.include_exts = py,png,jpg,kv,atlas,txt" >> buildozer.spec
+        echo "" >> buildozer.spec
+        echo "version = 0.1" >> buildozer.spec
+        echo "requirements = python3,kivy==2.1.0" >> buildozer.spec
+        echo "" >> buildozer.spec
+        echo "[app]" >> buildozer.spec
+        echo "android.permissions = CAMERA,ACCESS_FINE_LOCATION" >> buildozer.spec
+        echo "android.api = 31" >> buildozer.spec
+        echo "android.minapi = 21" >> buildozer.spec
+        echo "android.ndk = 25b" >> buildozer.spec
+        echo "android.arch = arm64-v8a" >> buildozer.spec
+        echo "" >> buildozer.spec
+        echo "[buildozer]" >> buildozer.spec
+        echo "log_level = 2" >> buildozer.spec
+        echo "android.accept_sdk_license = True" >> buildozer.spec
         
     - name: Build APK
       run: |
