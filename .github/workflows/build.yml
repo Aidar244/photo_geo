@@ -18,7 +18,8 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y build-essential git openjdk-11-jdk
-        pip install buildozer
+        pip install --upgrade pip
+        pip install Cython==0.29.36 buildozer
         
     - name: Initialize and build
       run: |
