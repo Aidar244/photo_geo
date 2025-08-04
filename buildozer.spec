@@ -8,8 +8,6 @@ source.include_exts = py,png,jpg,kv,atlas,txt
 
 version = 0.1
 requirements = python3,kivy==2.1.0
-
-[app]
 android.permissions = CAMERA,ACCESS_FINE_LOCATION
 android.api = 31
 android.minapi = 21
