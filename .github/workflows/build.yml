@@ -1,77 +1,22 @@
-name: Build Android APK
+name: Build Android APK with Docker
 
 on: [push]
 
 jobs:
-  build:
-    runs-on: ubuntu-20.04
-    
+  build-apk:
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Python
-      uses: actions/setup-python@v5
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Build APK with Docker
+      uses: ArtemSBulgakov/buildozer-action@v1
       with:
-        python-version: '3.8'
-        
-    - name: Install system dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y build-essential git openjdk-11-jdk
-        sudo apt install -y libffi-dev libssl-dev libjpeg-dev zlib1g-dev autoconf automake libtool pkg-config
-        sudo apt install -y unzip zip curl
-        
-    - name: Install Python dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade Cython==0.29.36
-        pip install --upgrade buildozer==1.5.0
-        pip install kivy==2.1.0
-        
-    - name: Create buildozer.spec
-      run: |
-        echo "[app]" > buildozer.spec
-        echo "title = PhotoGeo" >> buildozer.spec
-        echo "package.name = photo_geo" >> buildozer.spec
-        echo "package.domain = org.example" >> buildozer.spec
-        echo "" >> buildozer.spec
-        echo "source.dir = ." >> buildozer.spec
-        echo "source.include_exts = py,png,jpg,kv,atlas,txt" >> buildozer.spec
-        echo "" >> buildozer.spec
-        echo "version = 0.1" >> buildozer.spec
-        echo "requirements = python3,kivy==2.1.0" >> buildozer.spec
-        echo "" >> buildozer.spec
-        echo "[app]" >> buildozer.spec
-        echo "android.permissions = CAMERA,ACCESS_FINE_LOCATION" >> buildozer.spec
-        echo "android.api = 31" >> buildozer.spec
-        echo "android.minapi = 21" >> buildozer.spec
-        echo "android.ndk = 25b" >> buildozer.spec
-        echo "android.arch = arm64-v8a" >> buildozer.spec
-        echo "" >> buildozer.spec
-        echo "[buildozer]" >> buildozer.spec
-        echo "log_level = 2" >> buildozer.spec
-        echo "android.accept_sdk_license = True" >> buildozer.spec
-        
-    - name: Build APK
-      run: |
-        # Принудительно принимаем лицензии
-        echo "y" | sdkmanager --licenses >/dev/null 2>&1 || true
-        # Запускаем сборку с таймаутом
-        timeout 60m buildozer android debug || true
-        
-    - name: Check for APK
-      run: |
-        echo "=== Checking for APK files ==="
-        find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
-        echo "=== Contents of bin directory ==="
-        ls -la bin/ 2>/dev/null || echo "bin directory not found"
-        
+        workdir: .
+        cache: 'true'
+
     - name: Upload APK
       uses: actions/upload-artifact@v4
-      if: always()
       with:
         name: photo_geo-apk
-        path: |
-          bin/*.apk
-          *.apk
-        if-no-files-found: ignore
+        path: bin/*.apk
