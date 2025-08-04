@@ -1,22 +1,23 @@
-name: Build Android APK with Docker
+name: Build Android APK
 
 on: [push]
 
 jobs:
   build-apk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Build APK with Docker
-      uses: ArtemSBulgakov/buildozer-action@v1
-      with:
-        workdir: .
-        cache: 'true'
+      - name: Build with Kivy Complete Action
+        uses: kivy/buildozer-action@v1.0.0
+        with:
+          workdir: .
+          buildozer_version: '1.5.0'
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: photo_geo-apk
-        path: bin/*.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: photo_geo-apk
+          path: bin/*.apk
+          if-no-files-found: ignore
